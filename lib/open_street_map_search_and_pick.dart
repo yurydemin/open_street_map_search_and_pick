@@ -28,6 +28,7 @@ class OpenStreetMapSearchAndPick extends StatefulWidget {
   final double buttonWidth;
   final TextStyle buttonTextStyle;
   final String baseUri;
+  final String prefixSearchText;
 
   static Future<LatLng> nopFunction() {
     throw Exception("");
@@ -54,6 +55,7 @@ class OpenStreetMapSearchAndPick extends StatefulWidget {
       this.buttonHeight = 50,
       this.buttonWidth = 200,
       this.baseUri = 'https://nominatim.openstreetmap.org',
+      this.prefixSearchText = '',
       this.locationPinIcon = Icons.location_on})
       : super(key: key);
 
@@ -267,51 +269,70 @@ class _OpenStreetMapSearchAndPickState
               ),
               child: Column(
                 children: [
-                  TextFormField(
-                      controller: _searchController,
-                      focusNode: _focusNode,
-                      decoration: InputDecoration(
-                        hintText: widget.hintText,
-                        border: inputBorder,
-                        focusedBorder: inputFocusBorder,
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextFormField(
+                            controller: _searchController,
+                            focusNode: _focusNode,
+                            decoration: InputDecoration(
+                              hintText: widget.hintText,
+                              border: inputBorder,
+                              focusedBorder: inputFocusBorder,
+                            ),
+                            onChanged: (String value) {
+                              if (_debounce?.isActive ?? false) {
+                                _debounce?.cancel();
+                              }
+                              _debounce = Timer(
+                                  const Duration(milliseconds: 2000), () async {
+                                if (kDebugMode) {
+                                  print(value);
+                                }
+                                var client = http.Client();
+                                try {
+                                  final searchValue =
+                                      '${widget.prefixSearchText} $value';
+                                  String url =
+                                      '${widget.baseUri}/search?q=$searchValue&format=json&polygon_geojson=1&addressdetails=1';
+                                  if (kDebugMode) {
+                                    print(url);
+                                  }
+                                  var response =
+                                      await client.get(Uri.parse(url));
+                                  // var response = await client.post(Uri.parse(url));
+                                  var decodedResponse = jsonDecode(
+                                          utf8.decode(response.bodyBytes))
+                                      as List<dynamic>;
+                                  if (kDebugMode) {
+                                    print(decodedResponse);
+                                  }
+                                  _options = decodedResponse
+                                      .map((e) => OSMdata(
+                                          displayname: e['display_name'],
+                                          lat: double.parse(e['lat']),
+                                          lon: double.parse(e['lon'])))
+                                      .toList();
+                                  setState(() {});
+                                } finally {
+                                  client.close();
+                                }
+
+                                setState(() {});
+                              });
+                            }),
                       ),
-                      onChanged: (String value) {
-                        if (_debounce?.isActive ?? false) _debounce?.cancel();
-
-                        _debounce =
-                            Timer(const Duration(milliseconds: 2000), () async {
-                          if (kDebugMode) {
-                            print(value);
+                      const SizedBox(width: 8.0),
+                      IconButton(
+                        onPressed: () {
+                          if (_searchController.text.isNotEmpty) {
+                            _searchController.text = '';
                           }
-                          var client = http.Client();
-                          try {
-                            String url =
-                                '${widget.baseUri}/search?q=$value&format=json&polygon_geojson=1&addressdetails=1';
-                            if (kDebugMode) {
-                              print(url);
-                            }
-                            var response = await client.get(Uri.parse(url));
-                            // var response = await client.post(Uri.parse(url));
-                            var decodedResponse =
-                                jsonDecode(utf8.decode(response.bodyBytes))
-                                    as List<dynamic>;
-                            if (kDebugMode) {
-                              print(decodedResponse);
-                            }
-                            _options = decodedResponse
-                                .map((e) => OSMdata(
-                                    displayname: e['display_name'],
-                                    lat: double.parse(e['lat']),
-                                    lon: double.parse(e['lon'])))
-                                .toList();
-                            setState(() {});
-                          } finally {
-                            client.close();
-                          }
-
-                          setState(() {});
-                        });
-                      }),
+                        },
+                        icon: const Icon(Icons.clear),
+                      ),
+                    ],
+                  ),
                   StatefulBuilder(builder: ((context, setState) {
                     return ListView.builder(
                         shrinkWrap: true,
