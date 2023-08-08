@@ -291,6 +291,8 @@ class _OpenStreetMapSearchAndPickState
                                 _debounce?.cancel();
                               }
                               if (value.isEmpty) {
+                                _focusNode.unfocus();
+                                _options.clear();
                                 setState(() {});
                                 return;
                               }
@@ -336,6 +338,8 @@ class _OpenStreetMapSearchAndPickState
                       IconButton(
                         onPressed: () {
                           if (_searchController.text.isNotEmpty) {
+                            _focusNode.unfocus();
+                            _options.clear();
                             _searchController.text = '';
                           }
                         },
@@ -358,10 +362,11 @@ class _OpenStreetMapSearchAndPickState
                                   LatLng(
                                       _options[index].lat, _options[index].lon),
                                   15.0);
-
                               _focusNode.unfocus();
                               _options.clear();
-                              setState(() {});
+                              _searchController.text =
+                                  _options[index].displayname;
+                              //setState(() {});
                             },
                           );
                         });
