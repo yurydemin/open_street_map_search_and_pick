@@ -164,10 +164,11 @@ class _OpenStreetMapSearchAndPickState
           Positioned.fill(
               child: FlutterMap(
             options: MapOptions(
-                center: LatLng(widget.center.latitude, widget.center.longitude),
-                zoom: 15.0,
-                maxZoom: 18,
-                minZoom: 6),
+              center: LatLng(widget.center.latitude, widget.center.longitude),
+              zoom: 15.0,
+              maxZoom: 18,
+              minZoom: 6,
+            ),
             mapController: _mapController,
             children: [
               TileLayer(
@@ -270,6 +271,7 @@ class _OpenStreetMapSearchAndPickState
               child: Column(
                 children: [
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Expanded(
                         child: TextFormField(
@@ -284,6 +286,11 @@ class _OpenStreetMapSearchAndPickState
                               if (_debounce?.isActive ?? false) {
                                 _debounce?.cancel();
                               }
+                              if (value.isEmpty) {
+                                setState(() {});
+                                return;
+                              }
+
                               _debounce = Timer(
                                   const Duration(milliseconds: 2000), () async {
                                 if (kDebugMode) {
@@ -317,7 +324,6 @@ class _OpenStreetMapSearchAndPickState
                                 } finally {
                                   client.close();
                                 }
-
                                 setState(() {});
                               });
                             }),
