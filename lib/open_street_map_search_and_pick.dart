@@ -29,6 +29,8 @@ class OpenStreetMapSearchAndPick extends StatefulWidget {
   final TextStyle buttonTextStyle;
   final String baseUri;
   final String prefixSearchText;
+  final String country;
+  final bool isDetailedSearch;
 
   static Future<LatLng> nopFunction() {
     throw Exception("");
@@ -56,6 +58,8 @@ class OpenStreetMapSearchAndPick extends StatefulWidget {
       this.buttonWidth = 200,
       this.baseUri = 'https://nominatim.openstreetmap.org',
       this.prefixSearchText = '',
+      this.country = '',
+      this.isDetailedSearch = false,
       this.locationPinIcon = Icons.location_on})
       : super(key: key);
 
@@ -83,7 +87,7 @@ class _OpenStreetMapSearchAndPickState
       print(longitude);
     }
     String url =
-        '${widget.baseUri}/reverse?format=json&lat=$latitude&lon=$longitude&zoom=18&addressdetails=1';
+        '${widget.baseUri}/reverse?format=json&lat=$latitude&lon=$longitude&zoom=18&addressdetails=${widget.isDetailedSearch ? 1 : 0}';
 
     var response = await client.get(Uri.parse(url));
     // var response = await client.post(Uri.parse(url));
@@ -106,7 +110,7 @@ class _OpenStreetMapSearchAndPickState
     }
 
     String url =
-        '${widget.baseUri}/reverse?format=json&lat=$latitude&lon=$longitude&zoom=18&addressdetails=1';
+        '${widget.baseUri}/reverse?format=json&lat=$latitude&lon=$longitude&zoom=18&addressdetails=${widget.isDetailedSearch ? 1 : 0}';
 
     var response = await client.get(Uri.parse(url));
     // var response = await client.post(Uri.parse(url));
@@ -122,13 +126,13 @@ class _OpenStreetMapSearchAndPickState
   void initState() {
     _mapController = MapController();
 
-    setNameCurrentPosAtInit();
+    //setNameCurrentPosAtInit(); -- leave empty on init
 
     _mapController.mapEventStream.listen((event) async {
       if (event is MapEventMoveEnd) {
         var client = http.Client();
         String url =
-            '${widget.baseUri}/reverse?format=json&lat=${event.center.latitude}&lon=${event.center.longitude}&zoom=18&addressdetails=1';
+            '${widget.baseUri}/reverse?format=json&lat=${event.center.latitude}&lon=${event.center.longitude}&zoom=18&addressdetails=${widget.isDetailedSearch ? 1 : 0}';
 
         var response = await client.get(Uri.parse(url));
         // var response = await client.post(Uri.parse(url));
@@ -299,9 +303,9 @@ class _OpenStreetMapSearchAndPickState
                                 var client = http.Client();
                                 try {
                                   final searchValue =
-                                      '${widget.prefixSearchText} $value';
+                                      '${widget.prefixSearchText}$value';
                                   String url =
-                                      '${widget.baseUri}/search?q=$searchValue&format=json&polygon_geojson=1&addressdetails=1';
+                                      '${widget.baseUri}/search?q=$searchValue&format=json&polygon_geojson=1&addressdetails=${widget.isDetailedSearch ? 1 : 0}${widget.country.isEmpty ? '' : '&country="${widget.country}"'}';
                                   if (kDebugMode) {
                                     print(url);
                                   }
@@ -399,7 +403,7 @@ class _OpenStreetMapSearchAndPickState
         _mapController.center.latitude, _mapController.center.longitude);
     var client = http.Client();
     String url =
-        '${widget.baseUri}/reverse?format=json&lat=${_mapController.center.latitude}&lon=${_mapController.center.longitude}&zoom=18&addressdetails=1';
+        '${widget.baseUri}/reverse?format=json&lat=${_mapController.center.latitude}&lon=${_mapController.center.longitude}&zoom=18&addressdetails=${widget.isDetailedSearch ? 1 : 0}';
 
     var response = await client.get(Uri.parse(url));
     // var response = await client.post(Uri.parse(url));
