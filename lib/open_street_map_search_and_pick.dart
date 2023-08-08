@@ -366,7 +366,7 @@ class _OpenStreetMapSearchAndPickState
                                   _options[index].displayname;
                               _focusNode.unfocus();
                               _options.clear();
-                              //setState(() {});
+                              setState(() {});
                             },
                           );
                         });
