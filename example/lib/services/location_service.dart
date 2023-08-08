@@ -8,9 +8,7 @@ class LocationService {
       var status = await Permission.location.status;
       if (status.isGranted) {
       } else if (status.isDenied) {
-        Map<Permission, PermissionStatus> status = await [
-          Permission.location,
-        ].request();
+        await [Permission.location].request();
       }
     } else {
       // permission is disabled
