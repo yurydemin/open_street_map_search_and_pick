@@ -94,16 +94,9 @@ class _OpenStreetMapSearchAndPickState
     var decodedResponse =
         jsonDecode(utf8.decode(response.bodyBytes)) as Map<dynamic, dynamic>;
 
-    country = decodedResponse['address']['country'] ?? widget.country;
-    city = decodedResponse['address']['city'] ?? '';
-
-    if (kDebugMode) {
-      print('country: $country | city: $city');
-    }
-
-    // _searchController.text =
-    //     decodedResponse['display_name'] ?? "MOVE TO CURRENT POSITION";
-    // setState(() {});
+    _searchController.text =
+        decodedResponse['display_name'] ?? "MOVE TO CURRENT POSITION";
+    setState(() {});
   }
 
   void setNameCurrentPosAtInit() async {
@@ -124,9 +117,16 @@ class _OpenStreetMapSearchAndPickState
     var decodedResponse =
         jsonDecode(utf8.decode(response.bodyBytes)) as Map<dynamic, dynamic>;
 
-    _searchController.text =
-        decodedResponse['display_name'] ?? "MOVE TO CURRENT POSITION";
-    setState(() {});
+    country = decodedResponse['address']['country'] ?? widget.country;
+    city = decodedResponse['address']['city'] ?? '';
+
+    if (kDebugMode) {
+      print('country: $country | city: $city');
+    }
+
+    // _searchController.text =
+    //     decodedResponse['display_name'] ?? "MOVE TO CURRENT POSITION";
+    // setState(() {});
   }
 
   @override
