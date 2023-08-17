@@ -121,7 +121,7 @@ class _OpenStreetMapSearchAndPickState
     city = decodedResponse['address']['city'] ?? '';
 
     if (kDebugMode) {
-      print('country: $country | city: $city');
+      print('OnInitUpdate: country: $country | city: $city');
     }
 
     // _searchController.text =
@@ -145,6 +145,13 @@ class _OpenStreetMapSearchAndPickState
         // var response = await client.post(Uri.parse(url));
         var decodedResponse = jsonDecode(utf8.decode(response.bodyBytes))
             as Map<dynamic, dynamic>;
+
+        country = decodedResponse['address']['country'] ?? widget.country;
+        city = decodedResponse['address']['city'] ?? '';
+
+        if (kDebugMode) {
+          print('OnEventUpdate: country: $country | city: $city');
+        }
 
         _searchController.text = decodedResponse['display_name'];
         setState(() {});
