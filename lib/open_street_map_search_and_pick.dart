@@ -28,8 +28,8 @@ class OpenStreetMapSearchAndPick extends StatefulWidget {
   final double buttonWidth;
   final TextStyle buttonTextStyle;
   final String baseUri;
-  final String prefixSearchText;
   final String country;
+  final String city;
 
   static Future<LatLng> nopFunction() {
     throw Exception("");
@@ -56,8 +56,8 @@ class OpenStreetMapSearchAndPick extends StatefulWidget {
       this.buttonHeight = 50,
       this.buttonWidth = 200,
       this.baseUri = 'https://nominatim.openstreetmap.org',
-      this.prefixSearchText = '',
       this.country = '',
+      this.city = '',
       this.locationPinIcon = Icons.location_on})
       : super(key: key);
 
@@ -77,6 +77,15 @@ class _OpenStreetMapSearchAndPickState
   late String country;
   late String city;
 
+  void updateCountryAndCityOnResponse(Map<dynamic, dynamic> decodedResponse) {
+    country = decodedResponse['address']['country'] ?? widget.country;
+    city = decodedResponse['address']['city'] ?? widget.city;
+
+    if (kDebugMode) {
+      print('OnInitUpdate: country: $country | city: $city');
+    }
+  }
+
   void setNameCurrentPos() async {
     double latitude = _mapController.center.latitude;
     double longitude = _mapController.center.longitude;
@@ -93,6 +102,8 @@ class _OpenStreetMapSearchAndPickState
     // var response = await client.post(Uri.parse(url));
     var decodedResponse =
         jsonDecode(utf8.decode(response.bodyBytes)) as Map<dynamic, dynamic>;
+
+    updateCountryAndCityOnResponse(decodedResponse);
 
     _searchController.text =
         decodedResponse['display_name'] ?? "MOVE TO CURRENT POSITION";
@@ -117,12 +128,7 @@ class _OpenStreetMapSearchAndPickState
     var decodedResponse =
         jsonDecode(utf8.decode(response.bodyBytes)) as Map<dynamic, dynamic>;
 
-    country = decodedResponse['address']['country'] ?? widget.country;
-    city = decodedResponse['address']['city'] ?? '';
-
-    if (kDebugMode) {
-      print('OnInitUpdate: country: $country | city: $city');
-    }
+    updateCountryAndCityOnResponse(decodedResponse);
 
     // _searchController.text =
     //     decodedResponse['display_name'] ?? "MOVE TO CURRENT POSITION";
@@ -146,12 +152,7 @@ class _OpenStreetMapSearchAndPickState
         var decodedResponse = jsonDecode(utf8.decode(response.bodyBytes))
             as Map<dynamic, dynamic>;
 
-        country = decodedResponse['address']['country'] ?? widget.country;
-        city = decodedResponse['address']['city'] ?? '';
-
-        if (kDebugMode) {
-          print('OnEventUpdate: country: $country | city: $city');
-        }
+        updateCountryAndCityOnResponse(decodedResponse);
 
         _searchController.text = decodedResponse['display_name'];
         setState(() {});
