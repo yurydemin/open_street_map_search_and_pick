@@ -74,6 +74,8 @@ class _OpenStreetMapSearchAndPickState
   List<OSMdata> _options = <OSMdata>[];
   Timer? _debounce;
   var client = http.Client();
+  late String country;
+  late String city;
 
   void setNameCurrentPos() async {
     double latitude = _mapController.center.latitude;
@@ -92,9 +94,16 @@ class _OpenStreetMapSearchAndPickState
     var decodedResponse =
         jsonDecode(utf8.decode(response.bodyBytes)) as Map<dynamic, dynamic>;
 
-    _searchController.text =
-        decodedResponse['display_name'] ?? "MOVE TO CURRENT POSITION";
-    setState(() {});
+    country = decodedResponse['address']['country'] ?? widget.country;
+    city = decodedResponse['address']['city'] ?? '';
+
+    if (kDebugMode) {
+      print('country: $country | city: $city');
+    }
+
+    // _searchController.text =
+    //     decodedResponse['display_name'] ?? "MOVE TO CURRENT POSITION";
+    // setState(() {});
   }
 
   void setNameCurrentPosAtInit() async {
@@ -124,7 +133,7 @@ class _OpenStreetMapSearchAndPickState
   void initState() {
     _mapController = MapController();
 
-    //setNameCurrentPosAtInit(); -- leave empty on init
+    setNameCurrentPosAtInit();
 
     _mapController.mapEventStream.listen((event) async {
       if (event is MapEventMoveEnd) {
@@ -302,10 +311,11 @@ class _OpenStreetMapSearchAndPickState
                                 }
                                 var client = http.Client();
                                 try {
-                                  final searchValue =
-                                      '${widget.prefixSearchText}$value';
+                                  // final searchValue =
+                                  //     '${widget.prefixSearchText}$value';
+                                  final searchValue = '$country $city $value';
                                   String url =
-                                      '${widget.baseUri}/search?q=$searchValue&format=json&polygon_geojson=1&addressdetails=1${widget.country.isEmpty ? '' : '&country="${widget.country}"'}';
+                                      '${widget.baseUri}/search?q=$searchValue&format=json&polygon_geojson=1&addressdetails=1';
                                   if (kDebugMode) {
                                     print(url);
                                   }
