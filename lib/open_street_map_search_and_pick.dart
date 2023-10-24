@@ -30,8 +30,11 @@ class OpenStreetMapSearchAndPick extends StatefulWidget {
   final String searchBaseUri;
   final String mapsTemplateUrl;
   final List<String> mapsTemplateSubdomains;
-  final String country;
-  final String city;
+  // final String country;
+  // final String city;
+  final int responseResultsMaxCount;
+  final String baseRegionCode;
+  final String daDataToken;
 
   static Future<LatLng> nopFunction() {
     throw Exception("");
@@ -41,6 +44,7 @@ class OpenStreetMapSearchAndPick extends StatefulWidget {
       {Key? key,
       this.center = const LatLong(0, 0),
       required this.onPicked,
+      required this.daDataToken,
       this.zoomOutIcon = Icons.zoom_out_map,
       this.zoomInIcon = Icons.zoom_in_map,
       this.currentLocationIcon = Icons.my_location,
@@ -61,8 +65,10 @@ class OpenStreetMapSearchAndPick extends StatefulWidget {
       this.mapsTemplateUrl =
           'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
       this.mapsTemplateSubdomains = const ['a', 'b', 'c'],
-      this.country = '',
-      this.city = '',
+      this.responseResultsMaxCount = 5,
+      this.baseRegionCode = '66',
+      // this.country = '',
+      // this.city = '',
       this.locationPinIcon = Icons.location_on})
       : super(key: key);
 
@@ -76,93 +82,95 @@ class _OpenStreetMapSearchAndPickState
   MapController _mapController = MapController();
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _focusNode = FocusNode();
-  List<OSMdata> _options = <OSMdata>[];
+  //List<OSMdata> _options = <OSMdata>[];
+  List<DadataSuggestion> _suggestions = <DadataSuggestion>[];
+  DadataSuggestion? _selectedSuggestion;
   Timer? _debounce;
   var client = http.Client();
-  late String country;
-  late String city;
+  // late String country;
+  // late String city;
 
-  void updateCountryAndCityOnResponse(Map<dynamic, dynamic> decodedResponse) {
-    country = decodedResponse['address']['country'] ?? widget.country;
-    city = decodedResponse['address']['city'] ?? widget.city;
+  // void updateCountryAndCityOnResponse(Map<dynamic, dynamic> decodedResponse) {
+  //   country = decodedResponse['address']['country'] ?? widget.country;
+  //   city = decodedResponse['address']['city'] ?? widget.city;
 
-    if (kDebugMode) {
-      print('OnInitUpdate: country: $country | city: $city');
-    }
-  }
+  //   if (kDebugMode) {
+  //     print('OnInitUpdate: country: $country | city: $city');
+  //   }
+  // }
 
-  void setNameCurrentPos() async {
-    double latitude = _mapController.center.latitude;
-    double longitude = _mapController.center.longitude;
-    if (kDebugMode) {
-      print(latitude);
-    }
-    if (kDebugMode) {
-      print(longitude);
-    }
-    String url =
-        '${widget.searchBaseUri}/reverse?format=json&lat=$latitude&lon=$longitude&zoom=18&addressdetails=1';
+  // void setNameCurrentPos() async {
+  //   double latitude = _mapController.center.latitude;
+  //   double longitude = _mapController.center.longitude;
+  //   if (kDebugMode) {
+  //     print(latitude);
+  //   }
+  //   if (kDebugMode) {
+  //     print(longitude);
+  //   }
+  //   String url =
+  //       '${widget.searchBaseUri}/reverse?format=json&lat=$latitude&lon=$longitude&zoom=18&addressdetails=1';
 
-    var response = await client.get(Uri.parse(url));
-    // var response = await client.post(Uri.parse(url));
-    var decodedResponse =
-        jsonDecode(utf8.decode(response.bodyBytes)) as Map<dynamic, dynamic>;
+  //   var response = await client.get(Uri.parse(url));
+  //   // var response = await client.post(Uri.parse(url));
+  //   var decodedResponse =
+  //       jsonDecode(utf8.decode(response.bodyBytes)) as Map<dynamic, dynamic>;
 
-    updateCountryAndCityOnResponse(decodedResponse);
+  //   updateCountryAndCityOnResponse(decodedResponse);
 
-    _searchController.text =
-        decodedResponse['display_name'] ?? "MOVE TO CURRENT POSITION";
-    setState(() {});
-  }
+  //   _searchController.text =
+  //       decodedResponse['display_name'] ?? "MOVE TO CURRENT POSITION";
+  //   setState(() {});
+  // }
 
-  void setNameCurrentPosAtInit() async {
-    double latitude = widget.center.latitude;
-    double longitude = widget.center.longitude;
-    if (kDebugMode) {
-      print(latitude);
-    }
-    if (kDebugMode) {
-      print(longitude);
-    }
+  // void setNameCurrentPosAtInit() async {
+  //   double latitude = widget.center.latitude;
+  //   double longitude = widget.center.longitude;
+  //   if (kDebugMode) {
+  //     print(latitude);
+  //   }
+  //   if (kDebugMode) {
+  //     print(longitude);
+  //   }
 
-    String url =
-        '${widget.searchBaseUri}/reverse?format=json&lat=$latitude&lon=$longitude&zoom=18&addressdetails=1';
+  //   String url =
+  //       '${widget.searchBaseUri}/reverse?format=json&lat=$latitude&lon=$longitude&zoom=18&addressdetails=1';
 
-    var response = await client.get(Uri.parse(url));
-    // var response = await client.post(Uri.parse(url));
-    var decodedResponse =
-        jsonDecode(utf8.decode(response.bodyBytes)) as Map<dynamic, dynamic>;
+  //   var response = await client.get(Uri.parse(url));
+  //   // var response = await client.post(Uri.parse(url));
+  //   var decodedResponse =
+  //       jsonDecode(utf8.decode(response.bodyBytes)) as Map<dynamic, dynamic>;
 
-    updateCountryAndCityOnResponse(decodedResponse);
+  //   updateCountryAndCityOnResponse(decodedResponse);
 
-    // _searchController.text =
-    //     decodedResponse['display_name'] ?? "MOVE TO CURRENT POSITION";
-    // setState(() {});
-  }
+  //   // _searchController.text =
+  //   //     decodedResponse['display_name'] ?? "MOVE TO CURRENT POSITION";
+  //   // setState(() {});
+  // }
 
   @override
   void initState() {
     _mapController = MapController();
 
-    setNameCurrentPosAtInit();
+    // setNameCurrentPosAtInit();
 
-    _mapController.mapEventStream.listen((event) async {
-      if (event is MapEventMoveEnd) {
-        var client = http.Client();
-        String url =
-            '${widget.searchBaseUri}/reverse?format=json&lat=${event.center.latitude}&lon=${event.center.longitude}&zoom=18&addressdetails=1';
+    // _mapController.mapEventStream.listen((event) async {
+    //   if (event is MapEventMoveEnd) {
+    //     var client = http.Client();
+    //     String url =
+    //         '${widget.searchBaseUri}/reverse?format=json&lat=${event.center.latitude}&lon=${event.center.longitude}&zoom=18&addressdetails=1';
 
-        var response = await client.get(Uri.parse(url));
-        // var response = await client.post(Uri.parse(url));
-        var decodedResponse = jsonDecode(utf8.decode(response.bodyBytes))
-            as Map<dynamic, dynamic>;
+    //     var response = await client.get(Uri.parse(url));
+    //     // var response = await client.post(Uri.parse(url));
+    //     var decodedResponse = jsonDecode(utf8.decode(response.bodyBytes))
+    //         as Map<dynamic, dynamic>;
 
-        updateCountryAndCityOnResponse(decodedResponse);
+    //     updateCountryAndCityOnResponse(decodedResponse);
 
-        _searchController.text = decodedResponse['display_name'];
-        setState(() {});
-      }
-    });
+    //     _searchController.text = decodedResponse['display_name'];
+    //     setState(() {});
+    //   }
+    // });
 
     super.initState();
   }
@@ -191,7 +199,7 @@ class _OpenStreetMapSearchAndPickState
               center: LatLng(widget.center.latitude, widget.center.longitude),
               zoom: 15.0,
               maxZoom: 18,
-              minZoom: 6,
+              minZoom: 10,
             ),
             mapController: _mapController,
             children: [
@@ -252,32 +260,32 @@ class _OpenStreetMapSearchAndPickState
                   color: widget.buttonTextColor,
                 ),
               )),
-          Positioned(
-              bottom: 60,
-              right: 5,
-              child: FloatingActionButton(
-                heroTag: 'btn3',
-                backgroundColor: widget.buttonColor,
-                onPressed: () async {
-                  try {
-                    LatLng position =
-                        await widget.onGetCurrentLocationPressed.call();
-                    _mapController.move(
-                        LatLng(position.latitude, position.longitude),
-                        _mapController.zoom);
-                  } catch (e) {
-                    _mapController.move(
-                        LatLng(widget.center.latitude, widget.center.longitude),
-                        _mapController.zoom);
-                  } finally {
-                    setNameCurrentPos();
-                  }
-                },
-                child: Icon(
-                  widget.currentLocationIcon,
-                  color: widget.buttonTextColor,
-                ),
-              )),
+          // Positioned(
+          //     bottom: 60,
+          //     right: 5,
+          //     child: FloatingActionButton(
+          //       heroTag: 'btn3',
+          //       backgroundColor: widget.buttonColor,
+          //       onPressed: () async {
+          //         try {
+          //           LatLng position =
+          //               await widget.onGetCurrentLocationPressed.call();
+          //           _mapController.move(
+          //               LatLng(position.latitude, position.longitude),
+          //               _mapController.zoom);
+          //         } catch (e) {
+          //           _mapController.move(
+          //               LatLng(widget.center.latitude, widget.center.longitude),
+          //               _mapController.zoom);
+          //         } finally {
+          //           setNameCurrentPos();
+          //         }
+          //       },
+          //       child: Icon(
+          //         widget.currentLocationIcon,
+          //         color: widget.buttonTextColor,
+          //       ),
+          //     )),
           Positioned(
             top: 0,
             left: 0,
@@ -308,7 +316,9 @@ class _OpenStreetMapSearchAndPickState
                               }
                               if (value.isEmpty) {
                                 //_focusNode.unfocus();
-                                _options.clear();
+                                //_options.clear();
+                                _selectedSuggestion = null;
+                                _suggestions.clear();
                                 setState(() {});
                                 return;
                               }
@@ -320,29 +330,59 @@ class _OpenStreetMapSearchAndPickState
                                 }
                                 var client = http.Client();
                                 try {
-                                  // final searchValue =
-                                  //     '${widget.prefixSearchText}$value';
-                                  final searchValue = '$country $city $value';
-                                  String url =
-                                      '${widget.searchBaseUri}/search?q=$searchValue&format=json&polygon_geojson=1&addressdetails=1';
+                                  const testUrl =
+                                      'https://suggestions.dadata.ru/suggestions/api/4_1/rs/suggest/address';
+                                  final queryBody = jsonEncode(
+                                    QueryData(value).toJson(
+                                        widget.responseResultsMaxCount,
+                                        widget.baseRegionCode),
+                                  );
+                                  var testResponse = await http.post(
+                                    Uri.parse(testUrl),
+                                    headers: <String, String>{
+                                      "Content-Type": "application/json",
+                                      "Accept": "application/json",
+                                      "Authorization":
+                                          "Token ${widget.daDataToken}",
+                                    },
+                                    body: queryBody,
+                                  );
+                                  var testDecodedResponse =
+                                      jsonDecode(testResponse.body)
+                                          as Map<String, dynamic>;
                                   if (kDebugMode) {
-                                    print(url);
+                                    print(testDecodedResponse);
                                   }
-                                  var response =
-                                      await client.get(Uri.parse(url));
-                                  // var response = await client.post(Uri.parse(url));
-                                  var decodedResponse = jsonDecode(
-                                          utf8.decode(response.bodyBytes))
-                                      as List<dynamic>;
-                                  if (kDebugMode) {
-                                    print(decodedResponse);
-                                  }
-                                  _options = decodedResponse
-                                      .map((e) => OSMdata(
-                                          displayname: e['display_name'],
-                                          lat: double.parse(e['lat']),
-                                          lon: double.parse(e['lon'])))
+                                  var testDecodedArray =
+                                      testDecodedResponse['suggestions']
+                                          as List<dynamic>;
+                                  _suggestions = testDecodedArray
+                                      .map((e) => DadataSuggestion.fromJson(e))
                                       .toList();
+
+                                  // // final searchValue =
+                                  // //     '${widget.prefixSearchText}$value';
+                                  // final searchValue = '$country $city $value';
+                                  // String url =
+                                  //     '${widget.searchBaseUri}/search?q=$searchValue&format=json&polygon_geojson=1&addressdetails=1';
+                                  // if (kDebugMode) {
+                                  //   print(url);
+                                  // }
+                                  // var response =
+                                  //     await client.get(Uri.parse(url));
+                                  // // var response = await client.post(Uri.parse(url));
+                                  // var decodedResponse = jsonDecode(
+                                  //         utf8.decode(response.bodyBytes))
+                                  //     as List<dynamic>;
+                                  // if (kDebugMode) {
+                                  //   print(decodedResponse);
+                                  // }
+                                  // _options = decodedResponse
+                                  //     .map((e) => OSMdata(
+                                  //         displayname: e['display_name'],
+                                  //         lat: double.parse(e['lat']),
+                                  //         lon: double.parse(e['lon'])))
+                                  //     .toList();
                                   setState(() {});
                                 } finally {
                                   client.close();
@@ -356,7 +396,9 @@ class _OpenStreetMapSearchAndPickState
                         onPressed: () {
                           if (_searchController.text.isNotEmpty) {
                             _focusNode.unfocus();
-                            _options.clear();
+                            //_options.clear();
+                            _selectedSuggestion = null;
+                            _suggestions.clear();
                             _searchController.text = '';
                             setState(() {});
                           }
@@ -369,25 +411,53 @@ class _OpenStreetMapSearchAndPickState
                     return ListView.builder(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
-                        itemCount: _options.length > 5 ? 5 : _options.length,
+                        itemCount:
+                            _suggestions.length > widget.responseResultsMaxCount
+                                ? widget.responseResultsMaxCount
+                                : _suggestions.length,
                         itemBuilder: (context, index) {
                           return ListTile(
-                            title: Text(_options[index].displayname),
+                            title: Text(_suggestions[index].displayName),
                             subtitle: Text(
-                                '${_options[index].lat},${_options[index].lon}'),
+                                '${_suggestions[index].lat},${_suggestions[index].lon}'),
                             onTap: () {
                               _mapController.move(
                                   LatLng(
-                                      _options[index].lat, _options[index].lon),
+                                    _suggestions[index].lat,
+                                    _suggestions[index].lon,
+                                  ),
                                   15.0);
                               _searchController.text =
-                                  _options[index].displayname;
+                                  _suggestions[index].displayName;
+                              _selectedSuggestion = _suggestions[index];
                               _focusNode.unfocus();
-                              _options.clear();
+                              _suggestions.clear();
                               setState(() {});
                             },
                           );
                         });
+                    // return ListView.builder(
+                    //     shrinkWrap: true,
+                    //     physics: const NeverScrollableScrollPhysics(),
+                    //     itemCount: _options.length > 5 ? 5 : _options.length,
+                    //     itemBuilder: (context, index) {
+                    //       return ListTile(
+                    //         title: Text(_options[index].displayname),
+                    //         subtitle: Text(
+                    //             '${_options[index].lat},${_options[index].lon}'),
+                    //         onTap: () {
+                    //           _mapController.move(
+                    //               LatLng(
+                    //                   _options[index].lat, _options[index].lon),
+                    //               15.0);
+                    //           _searchController.text =
+                    //               _options[index].displayname;
+                    //           _focusNode.unfocus();
+                    //           _options.clear();
+                    //           setState(() {});
+                    //         },
+                    //       );
+                    //     });
                   })),
                 ],
               ),
@@ -405,11 +475,25 @@ class _OpenStreetMapSearchAndPickState
                   textStyle: widget.buttonTextStyle,
                   height: widget.buttonHeight,
                   width: widget.buttonWidth,
-                  onPressed: () async {
-                    pickData().then((value) {
-                      widget.onPicked(value);
-                    });
+                  onPressed: () {
+                    if (_selectedSuggestion == null) {
+                      return;
+                    }
+                    widget.onPicked(
+                      PickedData(
+                        LatLong(
+                          _selectedSuggestion!.lat,
+                          _selectedSuggestion!.lon,
+                        ),
+                        _selectedSuggestion!.displayName,
+                      ),
+                    );
                   },
+                  // onPressed: () async {
+                  //   pickData().then((value) {
+                  //     widget.onPicked(value);
+                  //   });
+                  // },
                   backgroundColor: widget.buttonColor,
                   foregroundColor: widget.buttonTextColor,
                 ),
@@ -421,43 +505,43 @@ class _OpenStreetMapSearchAndPickState
     );
   }
 
-  Future<PickedData> pickData() async {
-    LatLong center = LatLong(
-        _mapController.center.latitude, _mapController.center.longitude);
-    var client = http.Client();
-    String url =
-        '${widget.searchBaseUri}/reverse?format=json&lat=${_mapController.center.latitude}&lon=${_mapController.center.longitude}&zoom=18&addressdetails=1';
+  // Future<PickedData> pickData() async {
+  //   LatLong center = LatLong(
+  //       _mapController.center.latitude, _mapController.center.longitude);
+  //   var client = http.Client();
+  //   String url =
+  //       '${widget.searchBaseUri}/reverse?format=json&lat=${_mapController.center.latitude}&lon=${_mapController.center.longitude}&zoom=18&addressdetails=1';
 
-    var response = await client.get(Uri.parse(url));
-    // var response = await client.post(Uri.parse(url));
-    var decodedResponse =
-        jsonDecode(utf8.decode(response.bodyBytes)) as Map<dynamic, dynamic>;
-    String displayName = decodedResponse['display_name'] ?? '';
-    return PickedData(center, displayName, decodedResponse["address"] ?? '');
-  }
+  //   var response = await client.get(Uri.parse(url));
+  //   // var response = await client.post(Uri.parse(url));
+  //   var decodedResponse =
+  //       jsonDecode(utf8.decode(response.bodyBytes)) as Map<dynamic, dynamic>;
+  //   String displayName = decodedResponse['display_name'] ?? '';
+  //   return PickedData(center, displayName, decodedResponse["address"] ?? '');
+  // }
 }
 
-class OSMdata {
-  final String displayname;
-  final double lat;
-  final double lon;
-  OSMdata({required this.displayname, required this.lat, required this.lon});
-  @override
-  String toString() {
-    return '$displayname, $lat, $lon';
-  }
+// class OSMdata {
+//   final String displayname;
+//   final double lat;
+//   final double lon;
+//   OSMdata({required this.displayname, required this.lat, required this.lon});
+//   @override
+//   String toString() {
+//     return '$displayname, $lat, $lon';
+//   }
 
-  @override
-  bool operator ==(Object other) {
-    if (other.runtimeType != runtimeType) {
-      return false;
-    }
-    return other is OSMdata && other.displayname == displayname;
-  }
+//   @override
+//   bool operator ==(Object other) {
+//     if (other.runtimeType != runtimeType) {
+//       return false;
+//     }
+//     return other is OSMdata && other.displayname == displayname;
+//   }
 
-  @override
-  int get hashCode => Object.hash(displayname, lat, lon);
-}
+//   @override
+//   int get hashCode => Object.hash(displayname, lat, lon);
+// }
 
 class LatLong {
   final double latitude;
@@ -468,7 +552,54 @@ class LatLong {
 class PickedData {
   final LatLong latLong;
   final String addressName;
-  final Map<String, dynamic> address;
+  //final Map<String, dynamic> address;
 
-  PickedData(this.latLong, this.addressName, this.address);
+  PickedData(this.latLong, this.addressName); //, this.address);
+}
+
+class DadataSuggestion {
+  final String displayName;
+  final String country;
+  final String city;
+  final double lat;
+  final double lon;
+
+  DadataSuggestion(
+      this.displayName, this.country, this.city, this.lat, this.lon);
+
+  Map<String, dynamic> toJson() {
+    return {
+      'value': displayName,
+      'country': country,
+      'city': city,
+      'geo_lat': lat,
+      'geo_lon': lon,
+    };
+  }
+
+  static DadataSuggestion fromJson(Map<String, dynamic> json) {
+    return DadataSuggestion(
+      json['value'] as String,
+      json['data']['country'] as String,
+      json['data']['city'] as String,
+      double.parse(json['data']['geo_lat'] as String),
+      double.parse(json['data']['geo_lon'] as String),
+    );
+  }
+}
+
+class QueryData {
+  final String query;
+
+  QueryData(this.query);
+
+  Map<String, dynamic> toJson(int count, String regionCode) {
+    return {
+      'query': query,
+      'count': count,
+      'locations_boost': [
+        {'kladr_id': regionCode}
+      ]
+    };
+  }
 }
