@@ -192,11 +192,7 @@ class _OpenStreetMapSearchAndPickState
             children: [
               TileLayer(
                 urlTemplate:
-                    "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-                subdomains: const ['a', 'b', 'c'],
-                // attributionBuilder: (_) {
-                //   return Text("© OpenStreetMap contributors");
-                // },
+                    'http://tile2.maps.2gis.com/tiles?x={x}&y={y}&z={z}',
               ),
             ],
           )),
@@ -306,7 +302,7 @@ class _OpenStreetMapSearchAndPickState
                                 _debounce?.cancel();
                               }
                               if (value.isEmpty) {
-                                _focusNode.unfocus();
+                                //_focusNode.unfocus();
                                 _options.clear();
                                 setState(() {});
                                 return;
