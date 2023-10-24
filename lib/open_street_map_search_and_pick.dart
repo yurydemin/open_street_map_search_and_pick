@@ -27,7 +27,9 @@ class OpenStreetMapSearchAndPick extends StatefulWidget {
   final double buttonHeight;
   final double buttonWidth;
   final TextStyle buttonTextStyle;
-  final String baseUri;
+  final String searchBaseUri;
+  final String mapsTemplateUrl;
+  final List<String> mapsTemplateSubdomains;
   final String country;
   final String city;
 
@@ -55,7 +57,10 @@ class OpenStreetMapSearchAndPick extends StatefulWidget {
       this.buttonText = 'Set Current Location',
       this.buttonHeight = 50,
       this.buttonWidth = 200,
-      this.baseUri = 'https://nominatim.openstreetmap.org',
+      this.searchBaseUri = 'https://nominatim.openstreetmap.org',
+      this.mapsTemplateUrl =
+          'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      this.mapsTemplateSubdomains = const ['a', 'b', 'c'],
       this.country = '',
       this.city = '',
       this.locationPinIcon = Icons.location_on})
@@ -96,7 +101,7 @@ class _OpenStreetMapSearchAndPickState
       print(longitude);
     }
     String url =
-        '${widget.baseUri}/reverse?format=json&lat=$latitude&lon=$longitude&zoom=18&addressdetails=1';
+        '${widget.searchBaseUri}/reverse?format=json&lat=$latitude&lon=$longitude&zoom=18&addressdetails=1';
 
     var response = await client.get(Uri.parse(url));
     // var response = await client.post(Uri.parse(url));
@@ -121,7 +126,7 @@ class _OpenStreetMapSearchAndPickState
     }
 
     String url =
-        '${widget.baseUri}/reverse?format=json&lat=$latitude&lon=$longitude&zoom=18&addressdetails=1';
+        '${widget.searchBaseUri}/reverse?format=json&lat=$latitude&lon=$longitude&zoom=18&addressdetails=1';
 
     var response = await client.get(Uri.parse(url));
     // var response = await client.post(Uri.parse(url));
@@ -145,7 +150,7 @@ class _OpenStreetMapSearchAndPickState
       if (event is MapEventMoveEnd) {
         var client = http.Client();
         String url =
-            '${widget.baseUri}/reverse?format=json&lat=${event.center.latitude}&lon=${event.center.longitude}&zoom=18&addressdetails=1';
+            '${widget.searchBaseUri}/reverse?format=json&lat=${event.center.latitude}&lon=${event.center.longitude}&zoom=18&addressdetails=1';
 
         var response = await client.get(Uri.parse(url));
         // var response = await client.post(Uri.parse(url));
@@ -191,8 +196,8 @@ class _OpenStreetMapSearchAndPickState
             mapController: _mapController,
             children: [
               TileLayer(
-                urlTemplate:
-                    'https://tile2.maps.2gis.com/tiles?x={x}&y={y}&z={z}',
+                urlTemplate: widget.mapsTemplateUrl,
+                subdomains: widget.mapsTemplateSubdomains,
               ),
             ],
           )),
@@ -319,7 +324,7 @@ class _OpenStreetMapSearchAndPickState
                                   //     '${widget.prefixSearchText}$value';
                                   final searchValue = '$country $city $value';
                                   String url =
-                                      '${widget.baseUri}/search?q=$searchValue&format=json&polygon_geojson=1&addressdetails=1';
+                                      '${widget.searchBaseUri}/search?q=$searchValue&format=json&polygon_geojson=1&addressdetails=1';
                                   if (kDebugMode) {
                                     print(url);
                                   }
@@ -421,7 +426,7 @@ class _OpenStreetMapSearchAndPickState
         _mapController.center.latitude, _mapController.center.longitude);
     var client = http.Client();
     String url =
-        '${widget.baseUri}/reverse?format=json&lat=${_mapController.center.latitude}&lon=${_mapController.center.longitude}&zoom=18&addressdetails=1';
+        '${widget.searchBaseUri}/reverse?format=json&lat=${_mapController.center.latitude}&lon=${_mapController.center.longitude}&zoom=18&addressdetails=1';
 
     var response = await client.get(Uri.parse(url));
     // var response = await client.post(Uri.parse(url));
