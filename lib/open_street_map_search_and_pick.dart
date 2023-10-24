@@ -192,7 +192,7 @@ class _OpenStreetMapSearchAndPickState
             children: [
               TileLayer(
                 urlTemplate:
-                    'http://tile2.maps.2gis.com/tiles?x={x}&y={y}&z={z}',
+                    'https://tile2.maps.2gis.com/tiles?x={x}&y={y}&z={z}',
               ),
             ],
           )),
