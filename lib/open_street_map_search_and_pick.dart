@@ -15,7 +15,7 @@ import 'package:open_street_map_search_and_pick/widgets/wide_button.dart';
 
 class OpenStreetMapSearchAndPick extends StatefulWidget {
   final LatLon center;
-  final void Function(SelectedData pickedData) onPicked;
+  final void Function(SelectedData selectedData) onPicked;
   final Future<LatLng> Function() onGetCurrentLocationPressed;
   final IconData zoomInIcon;
   final IconData zoomOutIcon;
@@ -332,15 +332,20 @@ class _OpenStreetMapSearchAndPickState
                                 }
                                 var client = http.Client();
                                 try {
-                                  const testUrl =
+                                  // prepare
+                                  const url =
                                       'https://suggestions.dadata.ru/suggestions/api/4_1/rs/suggest/address';
                                   final queryBody = jsonEncode(
-                                    QueryData(value).toJson(
-                                        widget.responseResultsMaxCount,
-                                        widget.baseRegionCode),
+                                    QueryData(
+                                      query: value,
+                                      regionKladrId: widget.baseRegionCode,
+                                      suggestionsMaxCount:
+                                          widget.responseResultsMaxCount,
+                                    ).toJson(),
                                   );
-                                  var testResponse = await http.post(
-                                    Uri.parse(testUrl),
+                                  // request
+                                  var response = await http.post(
+                                    Uri.parse(url),
                                     headers: <String, String>{
                                       "Content-Type": "application/json",
                                       "Accept": "application/json",
@@ -349,16 +354,15 @@ class _OpenStreetMapSearchAndPickState
                                     },
                                     body: queryBody,
                                   );
-                                  var testDecodedResponse =
-                                      jsonDecode(testResponse.body)
+                                  // decode
+                                  var decodedResponse =
+                                      jsonDecode(response.body)
                                           as Map<String, dynamic>;
-                                  if (kDebugMode) {
-                                    print(testDecodedResponse);
-                                  }
-                                  var testDecodedArray =
-                                      testDecodedResponse['suggestions']
+                                  var decodedArray =
+                                      decodedResponse['suggestions']
                                           as List<dynamic>;
-                                  _suggestions = testDecodedArray
+                                  // unmarshal
+                                  _suggestions = decodedArray
                                       .map((e) => DadataSuggestion.fromJson(e))
                                       .toList();
 
