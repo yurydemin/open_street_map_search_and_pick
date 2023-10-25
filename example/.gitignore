@@ -131,3 +131,6 @@ amplifytools.xcconfig
 # Project Secrets
 /lib/storage/secrets.dart
 /web/firebase-config.js
+
+# Secrec
+secret.dart

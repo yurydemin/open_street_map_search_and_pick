@@ -1,5 +1,7 @@
+import 'package:example/secret.dart';
 import 'package:example/services/location_service.dart';
 import 'package:flutter/material.dart';
+import 'package:open_street_map_search_and_pick/models/lat_lon.dart';
 import 'package:open_street_map_search_and_pick/open_street_map_search_and_pick.dart';
 
 void main() {
@@ -41,15 +43,15 @@ class _MyHomePageState extends State<MyHomePage> {
           title: Text(widget.title),
         ),
         body: OpenStreetMapSearchAndPick(
+          dadataApiKey: dadataApiKey,
           buttonTextStyle:
               const TextStyle(fontSize: 18, fontStyle: FontStyle.normal),
-          center: const LatLong(56.829896019825, 60.596471680385),
+          center: const LatLon(56.829896019825, 60.596471680385),
           buttonColor: Colors.blue,
           buttonText: 'Set Current Location',
           onPicked: (pickedData) {
-            debugPrint(pickedData.latLong.latitude.toString());
-            debugPrint(pickedData.latLong.longitude.toString());
-            debugPrint(pickedData.address.toString());
+            debugPrint(pickedData.latLon.latitude.toString());
+            debugPrint(pickedData.latLon.longitude.toString());
             debugPrint(pickedData.addressName);
           },
           onGetCurrentLocationPressed: locationService.getPosition,

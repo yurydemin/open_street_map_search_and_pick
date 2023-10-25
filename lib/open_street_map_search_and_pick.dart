@@ -7,11 +7,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
+import 'package:open_street_map_search_and_pick/models/dadata_suggestion.dart';
+import 'package:open_street_map_search_and_pick/models/lat_lon.dart';
+import 'package:open_street_map_search_and_pick/models/query_data.dart';
+import 'package:open_street_map_search_and_pick/models/selected_data.dart';
 import 'package:open_street_map_search_and_pick/widgets/wide_button.dart';
 
 class OpenStreetMapSearchAndPick extends StatefulWidget {
-  final LatLong center;
-  final void Function(PickedData pickedData) onPicked;
+  final LatLon center;
+  final void Function(SelectedData pickedData) onPicked;
   final Future<LatLng> Function() onGetCurrentLocationPressed;
   final IconData zoomInIcon;
   final IconData zoomOutIcon;
@@ -34,43 +38,42 @@ class OpenStreetMapSearchAndPick extends StatefulWidget {
   // final String city;
   final int responseResultsMaxCount;
   final String baseRegionCode;
-  final String daDataToken;
+  final String dadataApiKey;
 
   static Future<LatLng> nopFunction() {
     throw Exception("");
   }
 
-  const OpenStreetMapSearchAndPick(
-      {Key? key,
-      this.center = const LatLong(0, 0),
-      required this.onPicked,
-      required this.daDataToken,
-      this.zoomOutIcon = Icons.zoom_out_map,
-      this.zoomInIcon = Icons.zoom_in_map,
-      this.currentLocationIcon = Icons.my_location,
-      this.onGetCurrentLocationPressed = nopFunction,
-      this.buttonColor = Colors.blue,
-      this.locationPinIconColor = Colors.blue,
-      this.locationPinText = 'Location',
-      this.locationPinTextStyle = const TextStyle(
-          fontSize: 16, fontWeight: FontWeight.bold, color: Colors.blue),
-      this.hintText = 'Search Location',
-      this.buttonTextStyle = const TextStyle(
-          fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
-      this.buttonTextColor = Colors.white,
-      this.buttonText = 'Set Current Location',
-      this.buttonHeight = 50,
-      this.buttonWidth = 200,
-      this.searchBaseUri = 'https://nominatim.openstreetmap.org',
-      this.mapsTemplateUrl =
-          'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-      this.mapsTemplateSubdomains = const ['a', 'b', 'c'],
-      this.responseResultsMaxCount = 5,
-      this.baseRegionCode = '66',
-      // this.country = '',
-      // this.city = '',
-      this.locationPinIcon = Icons.location_on})
-      : super(key: key);
+  const OpenStreetMapSearchAndPick({
+    Key? key,
+    this.center = const LatLon(0, 0),
+    required this.onPicked,
+    required this.dadataApiKey,
+    this.zoomOutIcon = Icons.zoom_out_map,
+    this.zoomInIcon = Icons.zoom_in_map,
+    this.currentLocationIcon = Icons.my_location,
+    this.onGetCurrentLocationPressed = nopFunction,
+    this.buttonColor = Colors.blue,
+    this.locationPinIconColor = Colors.blue,
+    this.locationPinText = 'Location',
+    this.locationPinTextStyle = const TextStyle(
+        fontSize: 16, fontWeight: FontWeight.bold, color: Colors.blue),
+    this.hintText = 'Search Location',
+    this.buttonTextStyle = const TextStyle(
+        fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+    this.buttonTextColor = Colors.white,
+    this.buttonText = 'Set Current Location',
+    this.buttonHeight = 50,
+    this.buttonWidth = 200,
+    this.searchBaseUri = 'https://nominatim.openstreetmap.org',
+    this.mapsTemplateUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    this.mapsTemplateSubdomains = const ['a', 'b', 'c'],
+    this.responseResultsMaxCount = 5,
+    this.baseRegionCode = '66',
+    // this.country = '',
+    // this.city = '',
+    this.locationPinIcon = Icons.location_on,
+  }) : super(key: key);
 
   @override
   State<OpenStreetMapSearchAndPick> createState() =>
@@ -183,7 +186,6 @@ class _OpenStreetMapSearchAndPickState
 
   @override
   Widget build(BuildContext context) {
-    // String? _autocompleteSelection;
     OutlineInputBorder inputBorder = OutlineInputBorder(
       borderSide: BorderSide(color: widget.buttonColor),
     );
@@ -343,7 +345,7 @@ class _OpenStreetMapSearchAndPickState
                                       "Content-Type": "application/json",
                                       "Accept": "application/json",
                                       "Authorization":
-                                          "Token ${widget.daDataToken}",
+                                          "Token ${widget.dadataApiKey}",
                                     },
                                     body: queryBody,
                                   );
@@ -480,8 +482,8 @@ class _OpenStreetMapSearchAndPickState
                       return;
                     }
                     widget.onPicked(
-                      PickedData(
-                        LatLong(
+                      SelectedData(
+                        LatLon(
                           _selectedSuggestion!.lat,
                           _selectedSuggestion!.lon,
                         ),
@@ -542,64 +544,3 @@ class _OpenStreetMapSearchAndPickState
 //   @override
 //   int get hashCode => Object.hash(displayname, lat, lon);
 // }
-
-class LatLong {
-  final double latitude;
-  final double longitude;
-  const LatLong(this.latitude, this.longitude);
-}
-
-class PickedData {
-  final LatLong latLong;
-  final String addressName;
-  //final Map<String, dynamic> address;
-
-  PickedData(this.latLong, this.addressName); //, this.address);
-}
-
-class DadataSuggestion {
-  final String displayName;
-  final String country;
-  final String city;
-  final double lat;
-  final double lon;
-
-  DadataSuggestion(
-      this.displayName, this.country, this.city, this.lat, this.lon);
-
-  Map<String, dynamic> toJson() {
-    return {
-      'value': displayName,
-      'country': country,
-      'city': city,
-      'geo_lat': lat,
-      'geo_lon': lon,
-    };
-  }
-
-  static DadataSuggestion fromJson(Map<String, dynamic> json) {
-    return DadataSuggestion(
-      json['value'] as String,
-      json['data']['country'] as String,
-      json['data']['city'] as String,
-      double.parse(json['data']['geo_lat'] as String),
-      double.parse(json['data']['geo_lon'] as String),
-    );
-  }
-}
-
-class QueryData {
-  final String query;
-
-  QueryData(this.query);
-
-  Map<String, dynamic> toJson(int count, String regionCode) {
-    return {
-      'query': query,
-      'count': count,
-      'locations_boost': [
-        {'kladr_id': regionCode}
-      ]
-    };
-  }
-}
