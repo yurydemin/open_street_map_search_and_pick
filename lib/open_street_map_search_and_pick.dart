@@ -1,4 +1,3 @@
-// ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:async';
 import 'dart:convert';
 
@@ -86,7 +85,7 @@ class _OpenStreetMapSearchAndPickState
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _focusNode = FocusNode();
   //List<OSMdata> _options = <OSMdata>[];
-  List<DadataSuggestion> _suggestions = <DadataSuggestion>[];
+  final List<DadataSuggestion> _suggestions = <DadataSuggestion>[];
   DadataSuggestion? _selectedSuggestion;
   Timer? _debounce;
   var client = http.Client();
@@ -361,10 +360,22 @@ class _OpenStreetMapSearchAndPickState
                                   var decodedArray =
                                       decodedResponse['suggestions']
                                           as List<dynamic>;
+
                                   // unmarshal
-                                  _suggestions = decodedArray
-                                      .map((e) => DadataSuggestion.fromJson(e))
-                                      .toList();
+                                  _suggestions.clear();
+                                  for (var e in decodedArray) {
+                                    try {
+                                      final sug = DadataSuggestion.fromJson(e);
+                                      _suggestions.add(sug);
+                                    } catch (exception) {
+                                      if (kDebugMode) {
+                                        print(exception);
+                                      }
+                                    }
+                                  }
+                                  // _suggestions = decodedArray
+                                  //     .map((e) => DadataSuggestion.fromJson(e))
+                                  //     .toList();
 
                                   // // final searchValue =
                                   // //     '${widget.prefixSearchText}$value';
